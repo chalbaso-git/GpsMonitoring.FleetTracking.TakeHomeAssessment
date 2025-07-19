@@ -38,7 +38,7 @@ namespace TakeHomeAssessmentApi.Controllers
             try
             {
                 var response = await _routingService.CalculateRouteAsync(request);
-                _consecutiveFailures = 0;
+                _consecutiveFailures = 0; // Resetear contador en éxito
                 await _auditService.LogAsync(new AuditLogDto
                 {
                     VehicleId = request.VehicleId,
@@ -50,10 +50,34 @@ namespace TakeHomeAssessmentApi.Controllers
             }
             catch (ArgumentException ex)
             {
+                _consecutiveFailures++;
+                if (_consecutiveFailures >= 3)
+                {
+                    _circuitOpen = true;
+                    await _auditService.LogAsync(new AuditLogDto
+                    {
+                        VehicleId = request.VehicleId,
+                        EventType = "CircuitBreakerActivated",
+                        Details = "Circuit Breaker activado por 3 fallos consecutivos.",
+                        Timestamp = DateTime.UtcNow
+                    });
+                }
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
+                _consecutiveFailures++;
+                if (_consecutiveFailures >= 3)
+                {
+                    _circuitOpen = true;
+                    await _auditService.LogAsync(new AuditLogDto
+                    {
+                        VehicleId = request.VehicleId,
+                        EventType = "CircuitBreakerActivated",
+                        Details = "Circuit Breaker activado por 3 fallos consecutivos.",
+                        Timestamp = DateTime.UtcNow
+                    });
+                }
                 return StatusCode(500, "Error interno: " + ex.Message);
             }
         }

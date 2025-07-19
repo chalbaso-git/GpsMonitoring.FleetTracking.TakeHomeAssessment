@@ -6,5 +6,6 @@ namespace Interfaces.Infrastructure
     {
         Task<GpsCoordinate?> GetLastCoordinateAsync(string vehicleId);
         Task SaveCoordinateAsync(GpsCoordinate coordinate);
+        Task<bool> DeleteVehicleAsync(string vehicleId);
     }
 }

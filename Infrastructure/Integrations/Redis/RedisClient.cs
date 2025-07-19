@@ -26,5 +26,10 @@ namespace Infrastructure.Integrations.Redis
             var json = JsonSerializer.Serialize(coordinate);
             await _db.StringSetAsync(coordinate.VehicleId, json, TimeSpan.FromMinutes(AppConstants.RedisTtlMinutes));
         }
+
+        public async Task<bool> DeleteVehicleAsync(string vehicleId)
+        {
+            return await _db.KeyDeleteAsync(vehicleId);
+        }
     }
 }
