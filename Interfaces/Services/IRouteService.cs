@@ -4,7 +4,7 @@ namespace Interfaces.Services
 {
     public interface IRouteService
     {
-        //Task AddRouteAsync(RouteDto dto);
-        //Task<List<RouteDto>> GetRoutesAsync();
+        Task AddRouteAsync(RouteDto dto);
+        Task<List<RouteDto>> GetRoutesAsync();
     }
 }

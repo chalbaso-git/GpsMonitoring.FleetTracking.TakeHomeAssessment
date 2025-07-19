@@ -1,8 +1,8 @@
 using Infrastructure;
-using Infrastructure.PostgreSQL;
 using Services;
 using StackExchange.Redis;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Integrations.PostgreSQL.Base;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,14 +18,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
 });
 
 // DI for services
-builder.Services.AddServices(builder.Configuration);
 builder.Services.AddInfrastructureServiceservices(builder.Configuration);
-
-// PostgreSQL configuration
-var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
-
-builder.Services.AddDbContext<FleetDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddServices(builder.Configuration);
 
 // Add controllers
 builder.Services.AddControllers();

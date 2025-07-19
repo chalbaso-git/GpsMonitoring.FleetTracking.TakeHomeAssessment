@@ -1,14 +1,15 @@
 using Domain.Entities;
+using Infrastructure.Integrations.PostgreSQL.Base;
 using Interfaces.Infrastructure.EF;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.PostgreSQL
+namespace Infrastructure.Integrations.PostgreSQL.EF
 {
     public class AuditLogRepository : IAuditLogRepository
     {
-        private readonly FleetDbContext _context;
+        private readonly PostgreSqlContext _context;
 
-        public AuditLogRepository(FleetDbContext context)
+        public AuditLogRepository(PostgreSqlContext context)
         {
             _context = context;
         }

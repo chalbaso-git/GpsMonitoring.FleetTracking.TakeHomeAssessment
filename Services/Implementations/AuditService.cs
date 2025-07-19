@@ -16,26 +16,45 @@ namespace Services.Implementations
 
         public async Task LogAsync(AuditLogDto log)
         {
-            var entity = new AuditLog
+            try
+            {
+                await _auditLogRepository.SaveAsync(MapToEntity(log));
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error al registrar el log de auditoría.", ex);
+            }
+        }
+
+        public async Task<List<AuditLogDto>> GetLogsAsync(string vehicleId)
+        {
+            try
+            {
+                var logs = await _auditLogRepository.GetByVehicleIdAsync(vehicleId);
+                return [.. logs.Select(MapToDto)];
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error al obtener los logs de auditoría.", ex);
+            }
+        }
+
+        private static AuditLog MapToEntity(AuditLogDto dto) =>
+            new()
+            {
+                VehicleId = dto.VehicleId,
+                EventType = dto.EventType,
+                Details = dto.Details,
+                Timestamp = dto.Timestamp
+            };
+
+        private static AuditLogDto MapToDto(AuditLog log) =>
+            new()
             {
                 VehicleId = log.VehicleId,
                 EventType = log.EventType,
                 Details = log.Details,
                 Timestamp = log.Timestamp
             };
-            await _auditLogRepository.SaveAsync(entity);
-        }
-
-        public async Task<List<AuditLogDto>> GetLogsAsync(string vehicleId)
-        {
-            var logs = await _auditLogRepository.GetByVehicleIdAsync(vehicleId);
-            return [.. logs.Select(l => new AuditLogDto
-            {
-                VehicleId = l.VehicleId,
-                EventType = l.EventType,
-                Details = l.Details,
-                Timestamp = l.Timestamp
-            })];
-        }
     }
 }

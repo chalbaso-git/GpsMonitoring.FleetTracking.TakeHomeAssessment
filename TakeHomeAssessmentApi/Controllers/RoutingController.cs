@@ -48,28 +48,13 @@ namespace TakeHomeAssessmentApi.Controllers
                 });
                 return Ok(response);
             }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
             catch (Exception ex)
             {
-                _consecutiveFailures++;
-                await _auditService.LogAsync(new AuditLogDto
-                {
-                    VehicleId = request.VehicleId,
-                    EventType = "RouteCalculationFailed",
-                    Details = $"Error: {ex.Message}",
-                    Timestamp = DateTime.UtcNow
-                });
-                if (_consecutiveFailures >= 3)
-                {
-                    _circuitOpen = true;
-                    await _auditService.LogAsync(new AuditLogDto
-                    {
-                        VehicleId = request.VehicleId,
-                        EventType = "CircuitBreakerOpened",
-                        Details = "Circuit breaker activado por fallos consecutivos.",
-                        Timestamp = DateTime.UtcNow
-                    });
-                }
-                return StatusCode(500, "Error al calcular la ruta.");
+                return StatusCode(500, "Error interno: " + ex.Message);
             }
         }
 

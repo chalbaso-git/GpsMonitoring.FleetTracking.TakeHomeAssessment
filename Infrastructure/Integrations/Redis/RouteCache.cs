@@ -3,7 +3,7 @@ using Interfaces.Infrastructure;
 using StackExchange.Redis;
 using System.Text.Json;
 
-namespace Infrastructure.Redis
+namespace Infrastructure.Integrations.Redis
 {
     public class RouteCache : IRouteCache
     {

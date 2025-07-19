@@ -10,7 +10,11 @@ namespace Services
         public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration config)
         {
             services.AddScoped<IGeolocationService, GeolocationService>();
-   
+            services.AddScoped<IAlertService, AlertService>();
+            services.AddScoped<IAuditService, AuditService>();
+            services.AddScoped<IRouteService, RouteService>();
+            services.AddScoped<IRoutingService, RoutingService>();
+
             return services;
         }
     }
