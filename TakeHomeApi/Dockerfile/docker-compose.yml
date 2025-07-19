@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+  geolocation-service:
+    build:
+      context: .
+      dockerfile: GpsMonitoring.FleetTracking.Geolocation.Api/Dockerfile/Dockerfile
+    container_name: geolocation-service
+    ports:
+      - "5000:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      REDIS__HOST: redis
+      REDIS__PORT: 6379
+    depends_on:
+      - redis
