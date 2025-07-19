@@ -18,7 +18,7 @@ namespace Infrastructure.Redis
         public async Task<GpsCoordinate?> GetLastCoordinateAsync(string vehicleId)
         {
             var value = await _db.StringGetAsync(vehicleId);
-            return value.HasValue ? JsonSerializer.Deserialize<GpsCoordinate>(value) : null;
+            return value.HasValue ? JsonSerializer.Deserialize<GpsCoordinate>(value!) : null;
         }
 
         public async Task SaveCoordinateAsync(GpsCoordinate coordinate)

@@ -4,20 +4,23 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuración de Redis
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var configuration = builder.Configuration.GetConnectionString("Redis");
-    return ConnectionMultiplexer.Connect(configuration);
-});
+// Redis configuration
+var redisHost = builder.Configuration["REDIS__HOST"] ?? "localhost";
+var redisPort = builder.Configuration["REDIS__PORT"] ?? "6379";
+var redisConnectionString = $"{redisHost}:{redisPort},abortConnect=false";
 
-// Resto de tu configuración...
+// Register Redis connection
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(redisConnectionString));
+
+// DI for services
+builder.Services.AddServices(builder.Configuration);
+builder.Services.AddInfrastructureServiceservices(builder.Configuration);
+
+// Add controllers
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddServices(builder.Configuration);
-builder.Services.AddInfrastructureServiceservices(builder.Configuration);
 
 var app = builder.Build();
 
