@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   redis:
     image: redis:7
@@ -10,8 +8,8 @@ services:
 
   geolocation-service:
     build:
-      context: .
-      dockerfile: GpsMonitoring.FleetTracking.Geolocation.Api/Dockerfile/Dockerfile
+      context: ./TakeHomeAssessmentApi
+      dockerfile: Dockerfile
     container_name: geolocation-service
     ports:
       - "5000:80"

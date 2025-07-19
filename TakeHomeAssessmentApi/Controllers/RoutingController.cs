@@ -1,3 +1,4 @@
+using Cross.Dtos;
 using Microsoft.AspNetCore.Mvc;
 
 namespace TakeHomeAssessmentApi.Controllers
@@ -7,6 +8,7 @@ namespace TakeHomeAssessmentApi.Controllers
     public class RoutingController : ControllerBase
     {
         [HttpPost("calculate")]
+        [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
         public IActionResult CalculateRoute([FromBody] RouteRequestDto request)
         {
             // Mock de algoritmo A*

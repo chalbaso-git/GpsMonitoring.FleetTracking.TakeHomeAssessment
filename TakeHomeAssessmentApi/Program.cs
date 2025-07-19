@@ -1,6 +1,8 @@
 using Infrastructure;
+using Infrastructure.PostgreSQL;
 using Services;
 using StackExchange.Redis;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,12 +12,19 @@ var redisPort = builder.Configuration["REDIS__PORT"] ?? "6379";
 var redisConnectionString = $"{redisHost}:{redisPort},abortConnect=false";
 
 // Register Redis connection
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect(redisConnectionString));
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+    ConnectionMultiplexer.ConnectAsync(redisConnectionString).GetAwaiter().GetResult());
 
 // DI for services
 builder.Services.AddServices(builder.Configuration);
 builder.Services.AddInfrastructureServiceservices(builder.Configuration);
+
+// PostgreSQL configuration
+var connectionString = builder.Configuration.GetConnectionString("PostgreSQL")
+    ?? "Host=localhost;Port=5432;Database=fleetdb;Username=postgres;Password=postgres";
+
+builder.Services.AddDbContext<FleetDbContext>(options =>
+    options.UseNpgsql(connectionString)); // <-- Esto ahora funcionará
 
 // Add controllers
 builder.Services.AddControllers();
@@ -24,7 +33,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline. 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -36,4 +45,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+
+await app.RunAsync();

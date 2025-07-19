@@ -23,7 +23,7 @@ namespace Infrastructure.Redis
 
         public async Task SaveRouteAsync(Route route)
         {
-            var key = $"{route.VehicleId}:{route.Path.First()}:{route.Path.Last()}";
+            var key = $"{route.VehicleId}:{route.Path[0]}:{route.Path[^1]}";
             var json = JsonSerializer.Serialize(route);
             await _db.StringSetAsync(key, json, TimeSpan.FromMinutes(5));
         }
