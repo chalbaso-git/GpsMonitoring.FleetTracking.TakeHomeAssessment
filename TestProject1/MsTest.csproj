@@ -10,6 +10,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ControllerTests\**" />
+    <Compile Remove="InfrastructureTests\**" />
+    <Compile Remove="ServiceTests\**" />
+    <EmbeddedResource Remove="ControllerTests\**" />
+    <EmbeddedResource Remove="InfrastructureTests\**" />
+    <EmbeddedResource Remove="ServiceTests\**" />
+    <None Remove="ControllerTests\**" />
+    <None Remove="InfrastructureTests\**" />
+    <None Remove="ServiceTests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="xunit" Version="2.5.3" />
@@ -18,12 +30,6 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="ControllerTests\" />
-    <Folder Include="InfrastructureTests\" />
-    <Folder Include="ServiceTests\" />
   </ItemGroup>
 
 </Project>

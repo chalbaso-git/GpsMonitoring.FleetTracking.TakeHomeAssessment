@@ -7,8 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="PostgreSQL\" />
-    <Folder Include="Redis\" />
+    <Compile Remove="PostgreSQL\**" />
+    <Compile Remove="Redis\**" />
+    <EmbeddedResource Remove="PostgreSQL\**" />
+    <EmbeddedResource Remove="Redis\**" />
+    <None Remove="PostgreSQL\**" />
+    <None Remove="Redis\**" />
   </ItemGroup>
 
 </Project>

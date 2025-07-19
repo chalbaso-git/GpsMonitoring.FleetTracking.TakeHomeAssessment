@@ -7,9 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Dtos\" />
-    <Folder Include="Helpers\" />
-    <Folder Include="Constants\" />
+    <Compile Remove="Constants\**" />
+    <Compile Remove="Dtos\**" />
+    <Compile Remove="Helpers\**" />
+    <EmbeddedResource Remove="Constants\**" />
+    <EmbeddedResource Remove="Dtos\**" />
+    <EmbeddedResource Remove="Helpers\**" />
+    <None Remove="Constants\**" />
+    <None Remove="Dtos\**" />
+    <None Remove="Helpers\**" />
   </ItemGroup>
 
 </Project>
