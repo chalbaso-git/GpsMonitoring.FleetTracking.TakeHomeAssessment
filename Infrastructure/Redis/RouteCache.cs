@@ -27,5 +27,20 @@ namespace Infrastructure.Redis
             var json = JsonSerializer.Serialize(route);
             await _db.StringSetAsync(key, json, TimeSpan.FromMinutes(5));
         }
+
+        // Locking distribuido para zona
+        public async Task<bool> AcquireZoneLockAsync(string origin, string destination, string vehicleId, TimeSpan timeout)
+        {
+            var lockKey = $"lock:zone:{origin}:{destination}";
+            return await _db.StringSetAsync(lockKey, vehicleId, timeout, When.NotExists);
+        }
+
+        public async Task ReleaseZoneLockAsync(string origin, string destination, string vehicleId)
+        {
+            var lockKey = $"lock:zone:{origin}:{destination}";
+            var value = await _db.StringGetAsync(lockKey);
+            if (value == vehicleId)
+                await _db.KeyDeleteAsync(lockKey);
+        }
     }
 }

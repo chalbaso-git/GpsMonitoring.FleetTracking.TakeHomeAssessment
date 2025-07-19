@@ -1,11 +1,10 @@
-﻿namespace Domain.Entities
+namespace Cross.Dtos
 {
-    public class Vehicle
+    public class VehicleCreateDto
     {
         public required string Id { get; set; }
         public required string Plate { get; set; }
         public string? Model { get; set; }
         public string? Status { get; set; }
-        public DateTime CreatedAt { get; set; }
     }
 }

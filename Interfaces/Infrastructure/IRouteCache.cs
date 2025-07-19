@@ -6,5 +6,7 @@ namespace Interfaces.Infrastructure
     {
         Task<Route?> GetCachedRouteAsync(string vehicleId, string origin, string destination);
         Task SaveRouteAsync(Route route);
+        Task<bool> AcquireZoneLockAsync(string origin, string destination, string vehicleId, TimeSpan timeout);
+        Task ReleaseZoneLockAsync(string origin, string destination, string vehicleId);
     }
 }

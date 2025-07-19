@@ -8,6 +8,9 @@ namespace Infrastructure.PostgreSQL
         public FleetDbContext(DbContextOptions<FleetDbContext> options) : base(options) { }
 
         public DbSet<AuditLog> AuditLogs { get; set; }
-        // Puedes agregar otros DbSet aquí (por ejemplo, vehículos, rutas, etc.)
+        public DbSet<Route> Routes { get; set; }
+        public DbSet<Alert> Alerts { get; set; }
+        public DbSet<Vehicle> Vehicles { get; set; }
+        // Agrega otros DbSet según tus tablas
     }
 }

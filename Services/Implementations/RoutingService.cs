@@ -23,31 +23,45 @@ namespace Services.Implementations
                 return new RouteResponseDto
                 {
                     VehicleId = cached.VehicleId,
-                    Path = cached.Path,
+                    Path = cached.Path.Split(',').ToList(),
                     Distance = cached.Distance,
                     CalculatedAt = cached.CalculatedAt
                 };
             }
 
-            // Mock de cálculo de ruta (A* simplificado)
-            var path = new List<string> { request.Origin, "Waypoint1", request.Destination };
-            var route = new Route
-            {
-                VehicleId = request.VehicleId,
-                Path = path,
-                Distance = 10.5,
-                CalculatedAt = DateTime.UtcNow
-            };
+            // Locking distribuido por zona
+            var lockTimeout = TimeSpan.FromSeconds(10);
+            var lockAcquired = await _routeCache.AcquireZoneLockAsync(request.Origin, request.Destination, request.VehicleId, lockTimeout);
+            if (!lockAcquired)
+                throw new InvalidOperationException("Zona ocupada, intente nuevamente más tarde.");
 
-            await _routeCache.SaveRouteAsync(route);
-
-            return new RouteResponseDto
+            try
             {
-                VehicleId = route.VehicleId,
-                Path = route.Path,
-                Distance = route.Distance,
-                CalculatedAt = route.CalculatedAt
-            };
+                // Mock de cálculo de ruta (A* simplificado)
+                var path = new List<string> { request.Origin, "Waypoint1", request.Destination };
+                // Reemplaza la asignación de 'Path' en la creación de 'Route' para convertir la lista en string
+                var route = new Route
+                {
+                    VehicleId = request.VehicleId,
+                    Path = string.Join(",", path), // Convierte List<string> a string
+                    Distance = 10.5,
+                    CalculatedAt = DateTime.UtcNow
+                };
+
+                await _routeCache.SaveRouteAsync(route);
+
+                return new RouteResponseDto
+                {
+                    VehicleId = route.VehicleId,
+                    Path = route.Path.Split(',').ToList(),
+                    Distance = route.Distance,
+                    CalculatedAt = route.CalculatedAt
+                };
+            }
+            finally
+            {
+                await _routeCache.ReleaseZoneLockAsync(request.Origin, request.Destination, request.VehicleId);
+            }
         }
     }
 }

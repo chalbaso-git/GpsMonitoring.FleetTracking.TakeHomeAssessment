@@ -19,7 +19,7 @@ namespace Services.Implementations
             var entity = new AuditLog
             {
                 VehicleId = log.VehicleId,
-                Action = log.Action,
+                EventType = log.EventType,
                 Details = log.Details,
                 Timestamp = log.Timestamp
             };
@@ -32,7 +32,7 @@ namespace Services.Implementations
             return [.. logs.Select(l => new AuditLogDto
             {
                 VehicleId = l.VehicleId,
-                Action = l.Action,
+                EventType = l.EventType,
                 Details = l.Details,
                 Timestamp = l.Timestamp
             })];
