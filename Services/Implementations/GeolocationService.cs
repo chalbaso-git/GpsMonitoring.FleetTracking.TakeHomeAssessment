@@ -19,7 +19,8 @@ namespace Services.Implementations
         // Solución: Convertir 'GpsCoordinate' a 'GpsCoordinateDto' antes de llamar a 'GeoUtils.CalculateDistance'
         public async Task StoreCoordinateAsync(GpsCoordinateDto coordinateDto)
         {
-            if (!CoordinateValidator.IsValid(coordinateDto.Latitude, coordinateDto.Longitude))
+            var spec = new GpsCoordinateSpecification();
+            if (!spec.IsSatisfiedBy(coordinateDto))
                 throw new ArgumentException("Invalid GPS coordinates.");
 
             var last = await _redisClient.GetLastCoordinateAsync(coordinateDto.VehicleId);

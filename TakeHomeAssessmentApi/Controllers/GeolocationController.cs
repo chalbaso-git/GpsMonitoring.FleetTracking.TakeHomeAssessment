@@ -6,7 +6,7 @@ namespace TakeHomeAssessmentApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class GeolocationController : ControllerBase // <-- Añadir herencia de ControllerBase
+    public class GeolocationController : ControllerBase
     {
         private readonly IGeolocationService _geolocationService;
         public GeolocationController(IGeolocationService geolocationService)
