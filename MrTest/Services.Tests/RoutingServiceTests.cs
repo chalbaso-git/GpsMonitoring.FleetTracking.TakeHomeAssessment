@@ -6,6 +6,8 @@ using Cross.Dtos;
 using Domain.Entities;
 using Moq;
 using Xunit;
+using Cross.Helpers.Context;
+using System.Linq.Expressions;
 
 namespace MrTest.Services.Tests
 {
@@ -78,7 +80,7 @@ namespace MrTest.Services.Tests
 
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CalculateRouteAsync(GetRequest()));
             Assert.Contains("Zona ocupada", ex.InnerException!.Message);
-            mockAlertService.Verify(a => a.AddAlertAsync(It.Is<AlertDto>(d => d.Type == "Deadlock")), Times.Once);
+            mockAlertService.Verify(a => a.AddAlert(It.Is<AlertDto>(d => d.Type == "Deadlock")), Times.Once);
         }
 
         [Fact]
@@ -91,14 +93,16 @@ namespace MrTest.Services.Tests
 
             mockCache.Setup(c => c.GetCachedRouteAsync("V1", "A", "B")).ReturnsAsync((Route)null!);
             mockCache.Setup(c => c.AcquireZoneLockAsync("A", "B", "V1", It.IsAny<TimeSpan>())).ReturnsAsync(true);
-            mockWaypointRepo.Setup(w => w.GetAllAsync()).ThrowsAsync(new Exception("Repo error"));
+            mockWaypointRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<Waypoint, bool>>>(), It.IsAny<FindOption>()))
+                .Throws(new Exception("Repo error"));
 
             var service = new RoutingService(mockCache.Object, mockRouteService.Object, mockAlertService.Object, mockWaypointRepo.Object);
 
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CalculateRouteAsync(GetRequest()));
             Assert.Contains("Error en el servicio de ruteo.", ex.Message);
             Assert.Equal("Repo error", ex.InnerException!.Message);
-            mockAlertService.Verify(a => a.AddAlertAsync(It.Is<AlertDto>(d => d.Type == "Error")), Times.Once);
+            mockAlertService.Verify(a => a.AddAlert(It.Is<AlertDto>(d => d.Type == "Error")), Times.Once);
         }
 
         [Fact]
@@ -160,7 +164,7 @@ namespace MrTest.Services.Tests
 
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CalculateRouteAsync(new RouteRequestDto { VehicleId = "V1", Origin = "A", Destination = "B" }));
             Assert.Contains("Zona ocupada", ex.InnerException!.Message);
-            mockAlertService.Verify(a => a.AddAlertAsync(It.Is<AlertDto>(d => d.Type == "Deadlock")), Times.Once);
+            mockAlertService.Verify(a => a.AddAlert(It.Is<AlertDto>(d => d.Type == "Deadlock")), Times.Once);
         }
 
         [Fact]
@@ -183,7 +187,9 @@ namespace MrTest.Services.Tests
             new() { Id = 1, Name = "X", Latitude = 0, Longitude = 0 },
             new() { Id = 2, Name = "Y", Latitude = 0, Longitude = 0 }
         };
-            mockWaypointRepo.Setup(w => w.GetAllAsync()).ReturnsAsync(waypoints);
+            mockWaypointRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<Waypoint, bool>>>(), It.IsAny<FindOption>()))
+                .Returns(waypoints);
 
             var service = new RoutingService(mockCache.Object, mockRouteService.Object, mockAlertService.Object, mockWaypointRepo.Object);
 

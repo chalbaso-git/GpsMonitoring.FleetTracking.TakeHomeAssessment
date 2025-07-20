@@ -38,9 +38,9 @@ namespace TakeHomeAssessmentApi.Controllers
         /// <returns>Lista de rutas.</returns>
         /// <response code="200">Lista de rutas obtenida correctamente.</response>
         [HttpGet]
-        public async Task<IActionResult> GetRoutes()
+        public IActionResult GetRoutes()
         {
-            var routes = await _routeService.GetRoutesAsync();
+            var routes = _routeService.GetRoutes();
             return Ok(routes);
         }
     }

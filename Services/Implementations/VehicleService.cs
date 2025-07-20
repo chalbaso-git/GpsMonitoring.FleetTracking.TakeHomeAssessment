@@ -1,5 +1,5 @@
-using Interfaces.Infrastructure;
 using Interfaces.Infrastructure.EF;
+using Interfaces.Infrastructure.Redis;
 using Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 

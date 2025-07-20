@@ -38,7 +38,7 @@ namespace Services.Implementations
                 var lockTimeout = TimeSpan.FromSeconds(10);
                 var lockAcquired = await _routeCache.AcquireZoneLockAsync(request.Origin, request.Destination, request.VehicleId, lockTimeout);
                 if (!lockAcquired)
-                    return await HandleDeadlock(request);
+                    return HandleDeadlock(request);
 
                 return await CalculateAndStoreRouteAsync(request);
             }
@@ -52,7 +52,7 @@ namespace Services.Implementations
         {
             try
             {
-                var waypoints = await GetDynamicWaypoints(request.Origin, request.Destination, 2);
+                var waypoints = GetDynamicWaypoints(request.Origin, request.Destination, 2);
                 var path = BuildPath(request.Origin, waypoints, request.Destination);
                 var route = CreateRoute(request.VehicleId, path);
 
@@ -63,7 +63,7 @@ namespace Services.Implementations
             }
             catch (Exception ex)
             {
-                await _alertService.AddAlertAsync(new AlertDto
+                _alertService.AddAlert(new AlertDto
                 {
                     VehicleId = request.VehicleId,
                     Type = "Error",
@@ -90,9 +90,9 @@ namespace Services.Implementations
             return MapToResponseDto(cached, [.. cached.Path.Split(',')]);
         }
 
-        private async Task<RouteResponseDto> HandleDeadlock(RouteRequestDto request)
+        private RouteResponseDto HandleDeadlock(RouteRequestDto request)
         {
-            await _alertService.AddAlertAsync(new AlertDto
+            _alertService.AddAlert(new AlertDto
             {
                 VehicleId = request.VehicleId,
                 Type = "Deadlock",
@@ -102,9 +102,12 @@ namespace Services.Implementations
             throw new InvalidOperationException("Zona ocupada, intente nuevamente más tarde.");
         }
 
-        private async Task<List<string>> GetDynamicWaypoints(string origin, string destination, int count = 2)
+        private List<string> GetDynamicWaypoints(string origin, string destination, int count = 2)
         {
-            var waypoints = await _waypointRepository.GetAllAsync();
+            var waypoints = _waypointRepository.Find(f => f.Id > 0)
+                .OrderBy(f => f.Id)
+                .ToList();
+
             var candidates = waypoints.Where(w => w.Name != origin && w.Name != destination).ToList();
             var random = new Random();
             return [.. candidates.OrderBy(_ => random.Next()).Take(count).Select(w => w.Name)];

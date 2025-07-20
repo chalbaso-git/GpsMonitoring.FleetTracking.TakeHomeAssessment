@@ -4,7 +4,7 @@ namespace Interfaces.Services
 {
     public interface IAuditService
     {
-        Task LogAsync(AuditLogDto log);
-        Task<List<AuditLogDto>> GetLogsAsync(string vehicleId);
+        void Log(AuditLogDto log);
+        List<AuditLogDto> GetLogs(string vehicleId);
     }
 }

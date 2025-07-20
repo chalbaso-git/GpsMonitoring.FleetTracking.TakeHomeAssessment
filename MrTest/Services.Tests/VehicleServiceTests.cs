@@ -1,11 +1,11 @@
 using Services.Implementations;
-using Interfaces.Infrastructure;
 using Interfaces.Infrastructure.EF;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
+using Interfaces.Infrastructure.Redis;
 
 namespace MrTest.Services.Tests
 {

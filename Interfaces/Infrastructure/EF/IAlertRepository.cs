@@ -2,9 +2,7 @@ using Domain.Entities;
 
 namespace Interfaces.Infrastructure.EF
 {
-    public interface IAlertRepository
+    public interface IAlertRepository : IGenericRepository<Alert>
     {
-        Task AddAsync(Alert alert);
-        Task<List<Alert>> GetAllAsync();
     }
 }

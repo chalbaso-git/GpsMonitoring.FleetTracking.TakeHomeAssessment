@@ -4,7 +4,7 @@ namespace Interfaces.Services
 {
     public interface IAlertService
     {
-        Task AddAlertAsync(AlertDto dto);
-        Task<List<AlertDto>> GetAlertsAsync();
+        void AddAlert(AlertDto dto);
+        List<AlertDto> GetAlerts();
     }
 }

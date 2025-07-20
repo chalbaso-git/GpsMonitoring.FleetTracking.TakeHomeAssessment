@@ -1,6 +1,6 @@
 using Cross.Dtos;
 using Domain.Entities;
-using Interfaces.Infrastructure;
+using Interfaces.Infrastructure.Redis;
 using Moq;
 using Services.Implementations;
 using System.Reflection;
@@ -80,8 +80,11 @@ namespace MrTest.Services.Tests
             var method = typeof(GeolocationService)
                 .GetMethod("ValidateCoordinate", BindingFlags.NonPublic | BindingFlags.Static);
 
-            // Act & Assert
-            method!.Invoke(null, [validDto]); 
+            // Act
+            Exception? ex = Record.Exception(() => method!.Invoke(null, [validDto]));
+
+            // Assert
+            Assert.Null(ex);
         }
 
         [Fact]
@@ -100,7 +103,7 @@ namespace MrTest.Services.Tests
                 .GetMethod("ValidateCoordinate", BindingFlags.NonPublic | BindingFlags.Static);
 
             // Act & Assert
-            var ex = Assert.Throws<TargetInvocationException>(() => method!.Invoke(null, new object[] { invalidDto }));
+            var ex = Assert.Throws<TargetInvocationException>(() => method!.Invoke(null, [invalidDto]));
             Assert.IsType<ArgumentException>(ex.InnerException);
             Assert.Equal("Invalid GPS coordinates.", ex.InnerException!.Message);
         }

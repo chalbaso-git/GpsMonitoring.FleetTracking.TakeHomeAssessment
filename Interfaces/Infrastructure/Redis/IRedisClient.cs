@@ -1,6 +1,6 @@
 ﻿using Domain.Entities;
 
-namespace Interfaces.Infrastructure
+namespace Interfaces.Infrastructure.Redis
 {
     public interface IRedisClient
     {

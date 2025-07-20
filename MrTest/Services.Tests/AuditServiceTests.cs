@@ -1,8 +1,10 @@
-using Services.Implementations;
-using Interfaces.Infrastructure.EF;
 using Cross.Dtos;
+using Cross.Helpers.Context;
 using Domain.Entities;
+using Interfaces.Infrastructure.EF;
 using Moq;
+using Services.Implementations;
+using System.Linq.Expressions;
 using Xunit;
 
 namespace MrTest.Services.Tests
@@ -10,7 +12,7 @@ namespace MrTest.Services.Tests
     public class AuditServiceTests
     {
         [Fact]
-        public async Task LogAsync_CallsRepositorySaveAsync_WithMappedEntity()
+        public void LogAsync_CallsRepositorySaveAsync_WithMappedEntity()
         {
             var mockRepo = new Mock<IAuditLogRepository>();
             var dto = new AuditLogDto
@@ -21,13 +23,14 @@ namespace MrTest.Services.Tests
                 Timestamp = DateTime.UtcNow
             };
 
-            mockRepo.Setup(r => r.SaveAsync(It.IsAny<AuditLog>())).Returns(Task.CompletedTask);
+            mockRepo
+                .Setup(repo => repo.Add(It.IsAny<AuditLog>()));
 
             var service = new AuditService(mockRepo.Object);
 
-            await service.LogAsync(dto);
+            service.Log(dto);
 
-            mockRepo.Verify(r => r.SaveAsync(It.Is<AuditLog>(log =>
+            mockRepo.Verify(r => r.Add(It.Is<AuditLog>(log =>
                 log.VehicleId == dto.VehicleId &&
                 log.EventType == dto.EventType &&
                 log.Details == dto.Details &&
@@ -36,7 +39,7 @@ namespace MrTest.Services.Tests
         }
 
         [Fact]
-        public async Task LogAsync_ThrowsInvalidOperationException_WhenRepositoryThrows()
+        public void LogAsync_ThrowsInvalidOperationException_WhenRepositoryThrows()
         {
             var mockRepo = new Mock<IAuditLogRepository>();
             var dto = new AuditLogDto
@@ -47,30 +50,34 @@ namespace MrTest.Services.Tests
                 Timestamp = DateTime.UtcNow
             };
 
-            mockRepo.Setup(r => r.SaveAsync(It.IsAny<AuditLog>())).ThrowsAsync(new Exception("Repo error"));
+            mockRepo
+                .Setup(repo => repo.Add(It.IsAny<AuditLog>()))
+                .Throws(new Exception("Repo error"));
 
             var service = new AuditService(mockRepo.Object);
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.LogAsync(dto));
+            var ex = Assert.Throws<InvalidOperationException>(() => service.Log(dto));
             Assert.Contains("Error al registrar el log de auditoría.", ex.Message);
             Assert.Equal("Repo error", ex.InnerException!.Message);
         }
 
         [Fact]
-        public async Task GetLogsAsync_ReturnsMappedDtos_WhenRepositoryReturnsLogs()
+        public void GetLogsAsync_ReturnsMappedDtos_WhenRepositoryReturnsLogs()
         {
             var mockRepo = new Mock<IAuditLogRepository>();
             var logs = new List<AuditLog>
-        {
-            new() { Id = 1, VehicleId = "V1", EventType = "E1", Details = "D1", Timestamp = DateTime.UtcNow },
-            new() { Id = 2, VehicleId = "V1", EventType = "E2", Details = "D2", Timestamp = DateTime.UtcNow }
-        };
+            {
+                new() { Id = 1, VehicleId = "V1", EventType = "E1", Details = "D1", Timestamp = DateTime.UtcNow },
+                new() { Id = 2, VehicleId = "V1", EventType = "E2", Details = "D2", Timestamp = DateTime.UtcNow }
+            };
 
-            mockRepo.Setup(r => r.GetByVehicleIdAsync("V1")).ReturnsAsync(logs);
+            mockRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<AuditLog, bool>>>(), It.IsAny<FindOption>()))
+                .Returns(logs);
 
             var service = new AuditService(mockRepo.Object);
 
-            var result = await service.GetLogsAsync("V1");
+            var result = service.GetLogs("V1");
 
             Assert.Equal(logs.Count, result.Count);
             Assert.Equal(logs[0].VehicleId, result[0].VehicleId);
@@ -78,14 +85,17 @@ namespace MrTest.Services.Tests
         }
 
         [Fact]
-        public async Task GetLogsAsync_ThrowsInvalidOperationException_WhenRepositoryThrows()
+        public void GetLogsAsync_ThrowsInvalidOperationException_WhenRepositoryThrows()
         {
             var mockRepo = new Mock<IAuditLogRepository>();
-            mockRepo.Setup(r => r.GetByVehicleIdAsync("V1")).ThrowsAsync(new Exception("Repo error"));
+            
+            mockRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<AuditLog, bool>>>(), It.IsAny<FindOption>()))
+                .Throws(new Exception("Repo error"));
 
             var service = new AuditService(mockRepo.Object);
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetLogsAsync("V1"));
+            var ex = Assert.Throws<InvalidOperationException>(() => service.GetLogs("V1"));
             Assert.Contains("Error al obtener los logs de auditoría.", ex.Message);
             Assert.Equal("Repo error", ex.InnerException!.Message);
         }

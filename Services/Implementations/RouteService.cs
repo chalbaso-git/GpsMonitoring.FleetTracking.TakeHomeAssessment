@@ -14,23 +14,27 @@ namespace Services.Implementations
             _repository = repository;
         }
 
-        public async Task AddRouteAsync(RouteDto dto)
+        public Task AddRouteAsync(RouteDto dto)
         {
             try
             {
-                await _repository.AddAsync(MapToEntity(dto));
+                _repository.Add(MapToEntity(dto));
             }
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Error al agregar la ruta.", ex);
             }
+
+            return Task.CompletedTask;
         }
 
-        public async Task<List<RouteDto>> GetRoutesAsync()
+        public List<RouteDto> GetRoutes()
         {
             try
             {
-                var routes = await _repository.GetAllAsync();
+                var routes = _repository.Find(f => f.Id > 0)
+                       .OrderBy(f => f.Id)
+                       .ToList();
                 return [.. routes.Select(MapToDto)];
             }
             catch (Exception ex)

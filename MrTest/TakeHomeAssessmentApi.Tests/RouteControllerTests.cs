@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Cross.Dtos;
 using Interfaces.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +46,7 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
         }
 
         [Fact]
-        public async Task GetRoutes_ReturnsOk_WithRoutes()
+        public void GetRoutes_ReturnsOk_WithRoutes()
         {
             var mockService = new Mock<IRouteService>();
             var routes = new List<RouteDto>
@@ -57,11 +54,11 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
                 GetRouteDto(),
                 new() { Id = 2, VehicleId = "V2", Path = "B->C", Distance = 5.0, CalculatedAt = DateTime.UtcNow }
             };
-            mockService.Setup(s => s.GetRoutesAsync()).ReturnsAsync(routes);
+            mockService.Setup(s => s.GetRoutes()).Returns(routes);
 
             var controller = new RouteController(mockService.Object);
 
-            var result = await controller.GetRoutes();
+            var result = controller.GetRoutes();
 
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(routes, okResult.Value);
@@ -71,11 +68,11 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
         public async Task GetRoutes_ThrowsException_WhenServiceFails()
         {
             var mockService = new Mock<IRouteService>();
-            mockService.Setup(s => s.GetRoutesAsync()).ThrowsAsync(new Exception("Error"));
+            mockService.Setup(s => s.GetRoutes()).Throws(new Exception("Error"));
 
             var controller = new RouteController(mockService.Object);
 
-            await Assert.ThrowsAsync<Exception>(() => controller.GetRoutes());
+            await Assert.ThrowsAsync<Exception>(() => Task.Run(() => controller.GetRoutes()));
         }
     }
 }

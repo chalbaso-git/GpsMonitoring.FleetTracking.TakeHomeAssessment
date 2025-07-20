@@ -2,9 +2,7 @@ using Domain.Entities;
 
 namespace Interfaces.Infrastructure.EF
 {
-    public interface IAuditLogRepository
+    public interface IAuditLogRepository : IGenericRepository<AuditLog>
     {
-        Task SaveAsync(AuditLog log);
-        Task<List<AuditLog>> GetByVehicleIdAsync(string vehicleId);
     }
 }

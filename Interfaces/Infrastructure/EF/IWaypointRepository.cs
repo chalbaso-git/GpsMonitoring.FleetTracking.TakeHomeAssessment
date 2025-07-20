@@ -2,8 +2,7 @@
 
 namespace Interfaces.Infrastructure.EF
 {
-    public interface IWaypointRepository
+    public interface IWaypointRepository : IGenericRepository<Waypoint>
     {
-        Task<List<Waypoint>> GetAllAsync();
     }
 }

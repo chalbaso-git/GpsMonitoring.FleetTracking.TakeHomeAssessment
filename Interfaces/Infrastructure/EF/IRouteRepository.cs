@@ -2,9 +2,7 @@ using Domain.Entities;
 
 namespace Interfaces.Infrastructure.EF
 {
-    public interface IRouteRepository
+    public interface IRouteRepository : IGenericRepository<Route>
     {
-        Task AddAsync(Route route);
-        Task<List<Route>> GetAllAsync();
     }
 }

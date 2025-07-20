@@ -19,34 +19,34 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
         };
 
         [Fact]
-        public async Task AddAlert_ReturnsOk_WhenSuccess()
+        public void AddAlert_ReturnsOk_WhenSuccess()
         {
             var mockService = new Mock<IAlertService>();
             var dto = GetAlertDto();
-            mockService.Setup(s => s.AddAlertAsync(dto)).Returns(Task.CompletedTask);
+            mockService.Setup(s => s.AddAlert(dto));
 
             var controller = new AlertController(mockService.Object);
 
-            var result = await controller.AddAlert(dto);
+            var result = controller.AddAlert(dto);
 
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal("Alerta registrada.", okResult.Value);
         }
 
         [Fact]
-        public async Task AddAlert_ThrowsException_WhenServiceFails()
+        public void AddAlert_ThrowsException_WhenServiceFails()
         {
             var mockService = new Mock<IAlertService>();
             var dto = GetAlertDto();
-            mockService.Setup(s => s.AddAlertAsync(dto)).ThrowsAsync(new Exception("Error"));
+            mockService.Setup(s => s.AddAlert(dto)).Throws(new Exception("Error"));
 
             var controller = new AlertController(mockService.Object);
 
-            await Assert.ThrowsAsync<Exception>(() => controller.AddAlert(dto));
+            Assert.Throws<Exception>(() => controller.AddAlert(dto));
         }
 
         [Fact]
-        public async Task GetAlerts_ReturnsOk_WithAlerts()
+        public void GetAlerts_ReturnsOk_WithAlerts()
         {
             var mockService = new Mock<IAlertService>();
             var alerts = new List<AlertDto>
@@ -54,25 +54,25 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
                 GetAlertDto(),
                 new() { Id = 2, VehicleId = "V2", Type = "Info", Message = "Another alert", CreatedAt = DateTime.UtcNow }
             };
-            mockService.Setup(s => s.GetAlertsAsync()).ReturnsAsync(alerts);
+            mockService.Setup(s => s.GetAlerts()).Returns(alerts);
 
             var controller = new AlertController(mockService.Object);
 
-            var result = await controller.GetAlerts();
+            var result = controller.GetAlerts();
 
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(alerts, okResult.Value);
         }
 
         [Fact]
-        public async Task GetAlerts_ThrowsException_WhenServiceFails()
+        public void GetAlerts_ThrowsException_WhenServiceFails()
         {
             var mockService = new Mock<IAlertService>();
-            mockService.Setup(s => s.GetAlertsAsync()).ThrowsAsync(new Exception("Error"));
+            mockService.Setup(s => s.GetAlerts()).Throws(new Exception("Error"));
 
             var controller = new AlertController(mockService.Object);
 
-            await Assert.ThrowsAsync<Exception>(() => controller.GetAlerts());
+            Assert.Throws<Exception>(() => controller.GetAlerts());
         }
     }
 }

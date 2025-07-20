@@ -1,8 +1,10 @@
 using Cross.Dtos;
+using Cross.Helpers.Context;
 using Domain.Entities;
 using Interfaces.Infrastructure.EF;
 using Moq;
 using Services.Implementations;
+using System.Linq.Expressions;
 using Xunit;
 
 namespace MrTest.Services.Tests
@@ -22,16 +24,17 @@ namespace MrTest.Services.Tests
                 CalculatedAt = DateTime.UtcNow
             };
 
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Route>())).Returns(Task.CompletedTask);
+            mockRepo
+                .Setup(repo => repo.Add(It.IsAny<Route>()));
 
             var service = new RouteService(mockRepo.Object);
 
             await service.AddRouteAsync(dto);
 
-            mockRepo.Verify(r => r.AddAsync(It.Is<Route>(route =>
+            mockRepo.Verify(r => r.Add(It.Is<Route>(route =>
                 route.VehicleId == dto.VehicleId &&
                 route.Path == dto.Path &&
-                route.Distance == dto.Distance &&
+                Math.Abs(route.Distance - dto.Distance) < 0.0001 &&
                 route.CalculatedAt == dto.CalculatedAt
             )), Times.Once);
         }
@@ -49,7 +52,9 @@ namespace MrTest.Services.Tests
                 CalculatedAt = DateTime.UtcNow
             };
 
-            mockRepo.Setup(r => r.AddAsync(It.IsAny<Route>())).ThrowsAsync(new Exception("Repo error"));
+            mockRepo
+                .Setup(repo => repo.Add(It.IsAny<Route>()))
+                .Throws(new Exception("Repo error"));
 
             var service = new RouteService(mockRepo.Object);
 
@@ -59,20 +64,22 @@ namespace MrTest.Services.Tests
         }
 
         [Fact]
-        public async Task GetRoutesAsync_ReturnsMappedDtos_WhenRepositoryReturnsRoutes()
+        public void GetRoutesAsync_ReturnsMappedDtos_WhenRepositoryReturnsRoutes()
         {
             var mockRepo = new Mock<IRouteRepository>();
             var routes = new List<Route>
-        {
-            new() { Id = 1, VehicleId = "V1", Path = "A->B", Distance = 10.5, CalculatedAt = DateTime.UtcNow },
-            new() { Id = 2, VehicleId = "V2", Path = "B->C", Distance = 5.0, CalculatedAt = DateTime.UtcNow }
-        };
+            {
+                new() { Id = 1, VehicleId = "V1", Path = "A->B", Distance = 10.5, CalculatedAt = DateTime.UtcNow },
+                new() { Id = 2, VehicleId = "V2", Path = "B->C", Distance = 5.0, CalculatedAt = DateTime.UtcNow }
+            };
 
-            mockRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(routes);
+            mockRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<Route, bool>>>(), It.IsAny<FindOption>()))
+                .Returns(routes);
 
             var service = new RouteService(mockRepo.Object);
 
-            var result = await service.GetRoutesAsync();
+            var result = service.GetRoutes();
 
             Assert.Equal(routes.Count, result.Count);
             Assert.Equal(routes[0].Id, result[0].Id);
@@ -80,14 +87,17 @@ namespace MrTest.Services.Tests
         }
 
         [Fact]
-        public async Task GetRoutesAsync_ThrowsInvalidOperationException_WhenRepositoryThrows()
+        public void GetRoutesAsync_ThrowsInvalidOperationException_WhenRepositoryThrows()
         {
             var mockRepo = new Mock<IRouteRepository>();
-            mockRepo.Setup(r => r.GetAllAsync()).ThrowsAsync(new Exception("Repo error"));
+
+            mockRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<Route, bool>>>(), It.IsAny<FindOption>()))
+                .Throws(new Exception("Repo error"));
 
             var service = new RouteService(mockRepo.Object);
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.GetRoutesAsync());
+            var ex = Assert.Throws<InvalidOperationException>(() => service.GetRoutes());
             Assert.Contains("Error al obtener las rutas.", ex.Message);
             Assert.Equal("Repo error", ex.InnerException!.Message);
         }

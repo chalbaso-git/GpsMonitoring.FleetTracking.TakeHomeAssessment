@@ -1,6 +1,6 @@
 ﻿using Cross.Constants;
 using Domain.Entities;
-using Interfaces.Infrastructure;
+using Interfaces.Infrastructure.Redis;
 using StackExchange.Redis;
 using System.Text.Json;
 

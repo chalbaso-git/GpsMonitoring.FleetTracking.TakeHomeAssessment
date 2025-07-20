@@ -34,7 +34,7 @@ namespace TakeHomeAssessmentApi.Controllers
         {
             if (_circuitBreakerService.IsOpen)
             {
-                await LogCircuitBreakerEvent(request.VehicleId, "CircuitBreakerOpen", "Servicio de ruteo desactivado.");
+                LogCircuitBreakerEvent(request.VehicleId, "CircuitBreakerOpen", "Servicio de ruteo desactivado.");
                 return StatusCode(503, "Servicio de ruteo desactivado por fallos consecutivos.");
             }
 
@@ -42,17 +42,17 @@ namespace TakeHomeAssessmentApi.Controllers
             {
                 var response = await _routingService.CalculateRouteAsync(request);
                 _circuitBreakerService.Reset();
-                await LogRouteCalculated(request.VehicleId, response.Path);
+                LogRouteCalculated(request.VehicleId, response.Path);
                 return Ok(response);
             }
             catch (ArgumentException ex)
             {
-                await HandleFailure(request.VehicleId, ex.Message);
+                HandleFailure(request.VehicleId, ex.Message);
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                await HandleFailure(request.VehicleId, "Error interno: " + ex.Message);
+                HandleFailure(request.VehicleId, "Error interno: " + ex.Message);
                 return StatusCode(500, "Error interno: " + ex.Message);
             }
         }
@@ -64,25 +64,25 @@ namespace TakeHomeAssessmentApi.Controllers
         /// <response code="200">Circuito reiniciado correctamente.</response>
         [HttpPost("reset-circuit")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        public async Task<IActionResult> ResetCircuit()
+        public IActionResult ResetCircuit()
         {
             _circuitBreakerService.Reset();
-            await LogCircuitBreakerEvent("", "CircuitBreakerReset", "Circuito reiniciado.");
+            LogCircuitBreakerEvent("", "CircuitBreakerReset", "Circuito reiniciado.");
             return Ok("Circuito reiniciado.");
         }
 
-        private async Task HandleFailure(string vehicleId, string details)
+        private void HandleFailure(string vehicleId, string details)
         {
             _circuitBreakerService.RegisterFailure();
             if (_circuitBreakerService.IsOpen)
             {
-                await LogCircuitBreakerEvent(vehicleId,  "CircuitBreakerActivated", $"Circuit Breaker activado por 3 fallos consecutivos. Detalle: {details}");
+                LogCircuitBreakerEvent(vehicleId, "CircuitBreakerActivated", $"Circuit Breaker activado por 3 fallos consecutivos. Detalle: {details}");
             }
         }
 
-        private async Task LogRouteCalculated(string vehicleId, List<string> path)
+        private void LogRouteCalculated(string vehicleId, List<string> path)
         {
-            await _auditService.LogAsync(new AuditLogDto
+            _auditService.Log(new AuditLogDto
             {
                 VehicleId = vehicleId,
                 EventType = "RouteCalculated",
@@ -91,15 +91,15 @@ namespace TakeHomeAssessmentApi.Controllers
             });
         }
 
-        private async Task LogCircuitBreakerEvent(string vehicleId, string eventType, string details)
+        private void LogCircuitBreakerEvent(string vehicleId, string eventType, string details)
         {
-            await _auditService.LogAsync(new AuditLogDto
+            _auditService.Log(new AuditLogDto
             {
                 VehicleId = vehicleId,
                 EventType = eventType,
                 Details = details,
                 Timestamp = DateTime.UtcNow
             });
-        }       
+        }
     }
 }

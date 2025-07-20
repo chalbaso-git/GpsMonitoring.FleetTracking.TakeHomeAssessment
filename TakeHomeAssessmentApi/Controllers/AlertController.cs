@@ -26,9 +26,9 @@ namespace TakeHomeAssessmentApi.Controllers
         /// <returns>Confirmación de registro exitoso.</returns>
         /// <response code="200">Alerta registrada correctamente.</response>
         [HttpPost]
-        public async Task<IActionResult> AddAlert([FromBody] AlertDto dto)
+        public IActionResult AddAlert([FromBody] AlertDto dto)
         {
-            await _alertService.AddAlertAsync(dto);
+            _alertService.AddAlert(dto);
             return Ok("Alerta registrada.");
         }
 
@@ -38,9 +38,9 @@ namespace TakeHomeAssessmentApi.Controllers
         /// <returns>Lista de alertas.</returns>
         /// <response code="200">Lista de alertas obtenida correctamente.</response>
         [HttpGet]
-        public async Task<IActionResult> GetAlerts()
+        public IActionResult GetAlerts()
         {
-            var alerts = await _alertService.GetAlertsAsync();
+            var alerts = _alertService.GetAlerts();
             return Ok(alerts);
         }
     }

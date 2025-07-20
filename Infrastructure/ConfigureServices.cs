@@ -3,6 +3,7 @@ using Infrastructure.Integrations.PostgreSQL.EF;
 using Infrastructure.Integrations.Redis;
 using Interfaces.Infrastructure;
 using Interfaces.Infrastructure.EF;
+using Interfaces.Infrastructure.Redis;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

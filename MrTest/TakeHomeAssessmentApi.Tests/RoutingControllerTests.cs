@@ -32,7 +32,7 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
             var statusResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(503, statusResult.StatusCode);
             Assert.Equal("Servicio de ruteo desactivado por fallos consecutivos.", statusResult.Value);
-            mockAudit.Verify(a => a.LogAsync(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerOpen")), Times.Once);
+            mockAudit.Verify(a => a.Log(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerOpen")), Times.Once);
         }
 
         [Fact]
@@ -59,7 +59,7 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal(response, okResult.Value);
             mockBreaker.Verify(b => b.Reset(), Times.Once);
-            mockAudit.Verify(a => a.LogAsync(It.Is<AuditLogDto>(l => l.EventType == "RouteCalculated")), Times.Once);
+            mockAudit.Verify(a => a.Log(It.Is<AuditLogDto>(l => l.EventType == "RouteCalculated")), Times.Once);
         }
 
         [Fact]
@@ -80,12 +80,12 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
             var badRequest = Assert.IsType<BadRequestObjectResult>(result);
             Assert.Equal("Datos inválidos", badRequest.Value);
             mockBreaker.Verify(b => b.RegisterFailure(), Times.Once);
-            mockAudit.Verify(a => a.LogAsync(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerActivated")), Times.Never);
+            mockAudit.Verify(a => a.Log(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerActivated")), Times.Never);
         }
 
 
         [Fact]
-        public async Task ResetCircuit_ResetsBreakerAndLogs()
+        public void ResetCircuit_ResetsBreakerAndLogs()
         {
             var mockRouting = new Mock<IRoutingService>();
             var mockAudit = new Mock<IAuditService>();
@@ -93,12 +93,12 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
 
             var controller = new RoutingController(mockRouting.Object, mockAudit.Object, mockBreaker.Object);
 
-            var result = await controller.ResetCircuit();
+            var result = controller.ResetCircuit();
 
             var okResult = Assert.IsType<OkObjectResult>(result);
             Assert.Equal("Circuito reiniciado.", okResult.Value);
             mockBreaker.Verify(b => b.Reset(), Times.Once);
-            mockAudit.Verify(a => a.LogAsync(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerReset")), Times.Once);
+            mockAudit.Verify(a => a.Log(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerReset")), Times.Once);
         }
 
         [Fact]
@@ -121,7 +121,7 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
             Assert.Equal(500, statusResult.StatusCode);
             Assert.Equal("Error interno: Error inesperado", statusResult.Value);
             mockBreaker.Verify(b => b.RegisterFailure(), Times.Once);
-            mockAudit.Verify(a => a.LogAsync(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerActivated")), Times.Never);
+            mockAudit.Verify(a => a.Log(It.Is<AuditLogDto>(l => l.EventType == "CircuitBreakerActivated")), Times.Never);
         }
 
         [Fact]
@@ -141,31 +141,26 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
             var expectedEventType = "CircuitBreakerActivated";
             var expectedDetails = "Circuit Breaker activado por 3 fallos consecutivos. Detalle: Test details";
 
-            var logMethod = controller.GetType()
-                .GetMethod("LogCircuitBreakerEvent", BindingFlags.NonPublic | BindingFlags.Instance);
-
             controller.GetType()
                 .GetField("_auditService", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(controller, mockAudit.Object);
 
-            mockAudit.Setup(a => a.LogAsync(It.Is<AuditLogDto>(l =>
-                l.VehicleId == expectedVehicleId &&
-                l.EventType == expectedEventType &&
-                l.Details == expectedDetails
-            ))).Callback(() => logCalled = true).Returns(Task.CompletedTask);
-
-
+            mockAudit.Setup(a => a.Log(It.Is<AuditLogDto>(l =>
+                        l.VehicleId == expectedVehicleId &&
+                        l.EventType == expectedEventType &&
+                        l.Details == expectedDetails
+                    ))).Callback(() => logCalled = true);
 
             var method = controller.GetType()
                .GetMethod("HandleFailure", BindingFlags.NonPublic | BindingFlags.Instance);
 
             if (method is not null)
             {
-                var task = method.Invoke(controller, new object[] { expectedVehicleId, "Test details" }) as Task;
+                var task = method.Invoke(controller, [expectedVehicleId, "Test details"]) as Task;
                 if (task is not null)
                 {
                     await task;
-                }       
+                }
             }
 
             // Assert

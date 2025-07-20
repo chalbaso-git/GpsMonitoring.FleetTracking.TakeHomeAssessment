@@ -2,7 +2,7 @@
 using Cross.Dtos;
 using Cross.Helpers;
 using Domain.Entities;
-using Interfaces.Infrastructure;
+using Interfaces.Infrastructure.Redis;
 using Interfaces.Services;
 
 namespace Services.Implementations

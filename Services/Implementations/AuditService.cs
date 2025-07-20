@@ -14,11 +14,11 @@ namespace Services.Implementations
             _auditLogRepository = auditLogRepository;
         }
 
-        public async Task LogAsync(AuditLogDto log)
+        public void Log(AuditLogDto log)
         {
             try
             {
-                await _auditLogRepository.SaveAsync(MapToEntity(log));
+                _auditLogRepository.Add(MapToEntity(log));
             }
             catch (Exception ex)
             {
@@ -26,11 +26,13 @@ namespace Services.Implementations
             }
         }
 
-        public async Task<List<AuditLogDto>> GetLogsAsync(string vehicleId)
+        public List<AuditLogDto> GetLogs(string vehicleId)
         {
             try
             {
-                var logs = await _auditLogRepository.GetByVehicleIdAsync(vehicleId);
+                var logs = _auditLogRepository.Find(f => f.VehicleId == vehicleId)
+                    .OrderBy(f => f.Id)
+                    .ToList();
                 return [.. logs.Select(MapToDto)];
             }
             catch (Exception ex)

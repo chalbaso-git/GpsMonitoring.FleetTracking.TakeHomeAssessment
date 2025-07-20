@@ -14,11 +14,11 @@ namespace Services.Implementations
             _repository = repository;
         }
 
-        public async Task AddAlertAsync(AlertDto dto)
+        public void AddAlert(AlertDto dto)
         {
             try
             {
-                await _repository.AddAsync(MapToEntity(dto));
+                _repository.Add(MapToEntity(dto));
             }
             catch (Exception ex)
             {
@@ -26,11 +26,13 @@ namespace Services.Implementations
             }
         }
 
-        public async Task<List<AlertDto>> GetAlertsAsync()
+        public List<AlertDto> GetAlerts()
         {
             try
             {
-                var alerts = await _repository.GetAllAsync();
+                var alerts = _repository.Find(f => f.Id > 0)
+                    .OrderBy(f => f.Id)
+                    .ToList();
                 return [.. alerts.Select(MapToDto)];
             }
             catch (Exception ex)
