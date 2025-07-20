@@ -4,6 +4,7 @@ using Domain.Entities;
 using Interfaces.Infrastructure.EF;
 using Moq;
 using Services.Implementations;
+using System;
 using System.Linq.Expressions;
 using Xunit;
 
@@ -99,6 +100,52 @@ namespace MrTest.Services.Tests
 
             var ex = Assert.Throws<InvalidOperationException>(() => service.GetRoutes());
             Assert.Contains("Error al obtener las rutas.", ex.Message);
+            Assert.Equal("Repo error", ex.InnerException!.Message);
+        }
+
+        [Fact]
+        public void GetRoutesByVehicleAndDate_ReturnsFilteredRoutes()
+        {
+            var mockRepo = new Mock<IRouteRepository>();
+            var vehicleId = "V1";
+            var from = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var to = new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+
+            var routes = new List<Route>
+            {
+                new() { Id = 1, VehicleId = vehicleId, Path = "A->B", Distance = 10.5, CalculatedAt = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new() { Id = 2, VehicleId = vehicleId, Path = "B->C", Distance = 5.0, CalculatedAt = new DateTime(2024, 7, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new() { Id = 3, VehicleId = "V2", Path = "C->D", Distance = 8.0, CalculatedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new() { Id = 4, VehicleId = vehicleId, Path = "D->E", Distance = 12.0, CalculatedAt = new DateTime(2023, 12, 31, 0, 0, 0, DateTimeKind.Utc) }
+            };
+
+            mockRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<Route, bool>>>(), It.IsAny<FindOption>()))
+                .Returns(routes);
+
+            var service = new RouteService(mockRepo.Object);
+
+            var result = service.GetRoutesByVehicleAndDate(vehicleId, from, to);
+
+            Assert.Equal(4, result.Count); 
+        }
+
+        [Fact]
+        public void GetRoutesByVehicleAndDate_ThrowsInvalidOperationException_WhenRepositoryThrows()
+        {
+            var mockRepo = new Mock<IRouteRepository>();
+            var vehicleId = "V1";
+            var from = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var to = new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+
+            mockRepo
+                .Setup(repo => repo.Find(It.IsAny<Expression<Func<Route, bool>>>(), It.IsAny<FindOption>()))
+                .Throws(new Exception("Repo error"));
+
+            var service = new RouteService(mockRepo.Object);
+
+            var ex = Assert.Throws<InvalidOperationException>(() => service.GetRoutesByVehicleAndDate(vehicleId, from, to));
+            Assert.Contains("Error al obtener las rutas históricas.", ex.Message);
             Assert.Equal("Repo error", ex.InnerException!.Message);
         }
     }

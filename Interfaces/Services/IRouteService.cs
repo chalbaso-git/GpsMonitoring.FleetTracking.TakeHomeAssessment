@@ -6,5 +6,6 @@ namespace Interfaces.Services
     {
         Task AddRouteAsync(RouteDto dto);
         List<RouteDto> GetRoutes();
+        List<RouteDto> GetRoutesByVehicleAndDate(string vehicleId, DateTime from, DateTime to);
     }
 }

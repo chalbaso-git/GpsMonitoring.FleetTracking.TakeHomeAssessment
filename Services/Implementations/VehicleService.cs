@@ -21,6 +21,17 @@ namespace Services.Implementations
             _dbContext = dbContext;
         }
 
+        /// <summary>
+        /// Elimina un vehículo de forma distribuida, asegurando la consistencia entre la base de datos y Redis.
+        /// <para>
+        /// Si ocurre un error al eliminar en Redis, se realiza un rollback de la transacción en la base de datos.
+        /// </para>
+        /// </summary>
+        /// <param name="vehicleId">Identificador del vehículo a eliminar.</param>
+        /// <returns>True si la eliminación fue exitosa; false en caso contrario.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Se lanza si ocurre un error en Redis o si la transacción distribuida falla y se realiza rollback.
+        /// </exception>
         public async Task<bool> DeleteVehicleDistributedAsync(string vehicleId)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();

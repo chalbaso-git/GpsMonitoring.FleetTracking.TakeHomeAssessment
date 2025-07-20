@@ -74,5 +74,34 @@ namespace MrTest.TakeHomeAssessmentApi.Tests
 
             await Assert.ThrowsAsync<Exception>(() => Task.Run(() => controller.GetRoutes()));
         }
+
+        [Fact]
+        public void GetRoutesByVehicleAndDate_ReturnsOkWithFilteredRoutes()
+        {
+            // Arrange
+            var mockService = new Mock<IRouteService>();
+            var vehicleId = "V1";
+            var from = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var to = new DateTime(2024, 12, 31, 0, 0, 0, DateTimeKind.Utc);
+
+            var expectedRoutes = new List<RouteDto>
+            {
+                new() { Id = 1, VehicleId = vehicleId, Path = "A,B", Distance = 10, CalculatedAt = new DateTime(2024, 6, 1, 0, 0, 0, DateTimeKind.Utc) },
+                new() { Id = 2, VehicleId = vehicleId, Path = "B,C", Distance = 15, CalculatedAt = new DateTime(2024, 7, 1, 0, 0, 0, DateTimeKind.Utc) }
+            };
+
+            mockService.Setup(s => s.GetRoutesByVehicleAndDate(vehicleId, from, to)).Returns(expectedRoutes);
+
+            var controller = new RouteController(mockService.Object);
+
+            // Act
+            var result = controller.GetRoutesByVehicleAndDate(vehicleId, from, to);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var actualRoutes = Assert.IsType<List<RouteDto>>(okResult.Value);
+            Assert.Equal(expectedRoutes.Count, actualRoutes.Count);
+            Assert.All(actualRoutes, r => Assert.Equal(vehicleId, r.VehicleId));
+        }
     }
 }

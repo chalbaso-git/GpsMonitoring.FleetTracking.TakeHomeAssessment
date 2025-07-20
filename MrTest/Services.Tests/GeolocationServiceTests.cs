@@ -36,27 +36,29 @@ namespace MrTest.Services.Tests
         public async Task StoreCoordinateAsync_DoesNotSave_WhenDuplicate()
         {
             var mockRedis = new Mock<IRedisClient>();
+            var dto = GetValidDto();
             var last = new GpsCoordinate
             {
-                VehicleId = "V1",
-                Latitude = 40.4168,
-                Longitude = -3.7038,
-                Timestamp = DateTime.UtcNow.AddSeconds(-10)
+                VehicleId = dto.VehicleId,
+                Latitude = dto.Latitude,
+                Longitude = dto.Longitude,
+                Timestamp = dto.Timestamp // Igualar el timestamp
             };
-            mockRedis.Setup(r => r.GetLastCoordinateAsync("V1")).ReturnsAsync(last);
+            mockRedis.Setup(r => r.GetLastCoordinateAsync(dto.VehicleId)).ReturnsAsync(last);
 
             var service = new GeolocationService(mockRedis.Object);
 
-            await service.StoreCoordinateAsync(GetValidDto());
+            await service.StoreCoordinateAsync(dto);
 
             mockRedis.Verify(r => r.SaveCoordinateAsync(It.IsAny<GpsCoordinate>()), Times.Never);
         }
 
         [Fact]
-        public async Task StoreCoordinateAsync_ThrowsInvalidOperationException_WhenRedisThrows()
+        public async Task StoreCoordinateAsync_ThrowsInvalidOperationException_WhenRedisThrows_OnSave()
         {
             var mockRedis = new Mock<IRedisClient>();
-            mockRedis.Setup(r => r.GetLastCoordinateAsync("V1")).ThrowsAsync(new Exception("Redis error"));
+            mockRedis.Setup(r => r.GetLastCoordinateAsync("V1")).ReturnsAsync((GpsCoordinate)null!);
+            mockRedis.Setup(r => r.SaveCoordinateAsync(It.IsAny<GpsCoordinate>())).ThrowsAsync(new Exception("Redis error"));
 
             var service = new GeolocationService(mockRedis.Object);
 
@@ -107,5 +109,61 @@ namespace MrTest.Services.Tests
             Assert.IsType<ArgumentException>(ex.InnerException);
             Assert.Equal("Invalid GPS coordinates.", ex.InnerException!.Message);
         }
+
+        [Fact]
+        public async Task ProcessPendingQueueAsync_SavesAllCoordinates_WhenRedisIsAvailable()
+        {
+            var mockRedis = new Mock<IRedisClient>();
+            var service = new GeolocationService(mockRedis.Object);
+
+            // Accede a la cola privada usando reflexión
+            var queueField = typeof(GeolocationService)
+                .GetField("_pendingQueue", BindingFlags.Static | BindingFlags.NonPublic);
+
+            var queue = (System.Collections.Concurrent.ConcurrentQueue<GpsCoordinate>)queueField!.GetValue(null)!;
+            queue.Clear();
+
+            var coord1 = new GpsCoordinate { VehicleId = "V1", Latitude = 1, Longitude = 2, Timestamp = DateTime.UtcNow };
+            var coord2 = new GpsCoordinate { VehicleId = "V2", Latitude = 3, Longitude = 4, Timestamp = DateTime.UtcNow };
+            queue.Enqueue(coord1);
+            queue.Enqueue(coord2);
+
+            mockRedis.Setup(r => r.SaveCoordinateAsync(It.IsAny<GpsCoordinate>())).Returns(Task.CompletedTask);
+
+            await service.ProcessPendingQueueAsync();
+
+            // Verifica que ambos se guardaron y la cola está vacía
+            mockRedis.Verify(r => r.SaveCoordinateAsync(coord1), Times.Once);
+            mockRedis.Verify(r => r.SaveCoordinateAsync(coord2), Times.Once);
+            Assert.True(queue.IsEmpty);
+        }
+
+        [Fact]
+        public async Task ProcessPendingQueueAsync_ReEnqueues_WhenRedisFails()
+        {
+            var mockRedis = new Mock<IRedisClient>();
+            var service = new GeolocationService(mockRedis.Object);
+
+            // Accede a la cola privada usando reflexión
+            var queueField = typeof(GeolocationService)
+                .GetField("_pendingQueue", BindingFlags.Static | BindingFlags.NonPublic);
+
+            var queue = (System.Collections.Concurrent.ConcurrentQueue<GpsCoordinate>)queueField!.GetValue(null)!;
+            queue.Clear();
+
+            var coord1 = new GpsCoordinate { VehicleId = "V1", Latitude = 1, Longitude = 2, Timestamp = DateTime.UtcNow };
+            queue.Enqueue(coord1);
+
+            // Simula fallo al guardar
+            mockRedis.Setup(r => r.SaveCoordinateAsync(coord1)).ThrowsAsync(new Exception("Redis error"));
+
+            await service.ProcessPendingQueueAsync();
+
+            // Verifica que se intentó guardar y que la coordenada sigue en la cola
+            mockRedis.Verify(r => r.SaveCoordinateAsync(coord1), Times.Once);
+            Assert.False(queue.IsEmpty);
+        }
+
+
     }
 }

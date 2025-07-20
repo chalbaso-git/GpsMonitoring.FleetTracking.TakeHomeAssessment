@@ -26,6 +26,7 @@ namespace TakeHomeAssessmentApi.Controllers
         /// <returns>Confirmación de registro exitoso.</returns>
         /// <response code="200">Alerta registrada correctamente.</response>
         [HttpPost]
+        [ProducesResponseType(typeof(string), 200)]
         public IActionResult AddAlert([FromBody] AlertDto dto)
         {
             _alertService.AddAlert(dto);
@@ -38,6 +39,7 @@ namespace TakeHomeAssessmentApi.Controllers
         /// <returns>Lista de alertas.</returns>
         /// <response code="200">Lista de alertas obtenida correctamente.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(List<AlertDto>), 200)]
         public IActionResult GetAlerts()
         {
             var alerts = _alertService.GetAlerts();

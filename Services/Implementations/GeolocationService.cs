@@ -1,74 +1,86 @@
-﻿using Cross.Constants;
-using Cross.Dtos;
-using Cross.Helpers;
+﻿using Cross.Dtos;
 using Domain.Entities;
 using Interfaces.Infrastructure.Redis;
 using Interfaces.Services;
+using System.Collections.Concurrent;
 
 namespace Services.Implementations
 {
     public class GeolocationService : IGeolocationService
     {
         private readonly IRedisClient _redisClient;
+        private static readonly ConcurrentQueue<GpsCoordinate> _pendingQueue = new();
 
         public GeolocationService(IRedisClient redisClient)
         {
             _redisClient = redisClient;
         }
 
+        /// <summary>
+        /// Almacena una coordenada GPS en Redis. Si Redis no está disponible, la coordenada se guarda en una cola temporal
+        /// y se reintenta la sincronización cuando el servicio se recupere.
+        /// </summary>
         public async Task StoreCoordinateAsync(GpsCoordinateDto coordinateDto)
         {
+            ValidateCoordinate(coordinateDto);
+
+            var last = await _redisClient.GetLastCoordinateAsync(coordinateDto.VehicleId);
+
+            const double Tolerance = 1e-6;
+            if (last != null &&
+                last.VehicleId == coordinateDto.VehicleId &&
+                Math.Abs(last.Latitude - coordinateDto.Latitude) < Tolerance &&
+                Math.Abs(last.Longitude - coordinateDto.Longitude) < Tolerance &&
+                last.Timestamp == coordinateDto.Timestamp)
+            {
+                return;
+            }
+
+            var entity = new GpsCoordinate
+            {
+                VehicleId = coordinateDto.VehicleId,
+                Latitude = coordinateDto.Latitude,
+                Longitude = coordinateDto.Longitude,
+                Timestamp = coordinateDto.Timestamp
+            };
+
             try
             {
-                ValidateCoordinate(coordinateDto);
-
-                var last = await _redisClient.GetLastCoordinateAsync(coordinateDto.VehicleId);
-                var current = MapToEntity(coordinateDto);
-
-                if (IsDuplicate(last, current))
-                    return;
-
-                await _redisClient.SaveCoordinateAsync(current);
+                await _redisClient.SaveCoordinateAsync(entity);
+                // Intentar procesar la cola pendiente si existe
+                await ProcessPendingQueueAsync();
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("Error al almacenar la coordenada GPS.", ex);
+                _pendingQueue.Enqueue(entity);
+                throw new InvalidOperationException("Error al almacenar la coordenada GPS. Se guardó en cola para reintento.", ex);
             }
         }
 
-        private static void ValidateCoordinate(GpsCoordinateDto coordinateDto)
+        /// <summary>
+        /// Procesa la cola de coordenadas pendientes y las almacena en Redis.
+        /// </summary>
+        public async Task ProcessPendingQueueAsync()
         {
-            var spec = new GpsCoordinateSpecification();
-            if (!spec.IsSatisfiedBy(coordinateDto))
+            while (_pendingQueue.TryDequeue(out var pending))
+            {
+                try
+                {
+                    await _redisClient.SaveCoordinateAsync(pending);
+                }
+                catch
+                {
+                    // Si vuelve a fallar, re-enqueue y salir para evitar bucle infinito
+                    _pendingQueue.Enqueue(pending);
+                    break;
+                }
+            }
+        }
+
+        private static void ValidateCoordinate(GpsCoordinateDto dto)
+        {
+            if (dto.Latitude < -90 || dto.Latitude > 90 || dto.Longitude < -180 || dto.Longitude > 180)
                 throw new ArgumentException("Invalid GPS coordinates.");
         }
-
-        private static GpsCoordinate MapToEntity(GpsCoordinateDto dto) =>
-            new()
-            {
-                VehicleId = dto.VehicleId,
-                Latitude = dto.Latitude,
-                Longitude = dto.Longitude,
-                Timestamp = dto.Timestamp
-            };
-
-        private static bool IsDuplicate(GpsCoordinate? last, GpsCoordinate current)
-        {
-            if (last == null) return false;
-
-            var lastDto = MapToDto(last);
-            var currentDto = MapToDto(current);
-            var distance = GeoUtils.CalculateDistance(lastDto, currentDto);
-            return distance < AppConstants.DuplicateThresholdMeters;
-        }
-
-        private static GpsCoordinateDto MapToDto(GpsCoordinate entity) =>
-            new()
-            {
-                VehicleId = entity.VehicleId,
-                Latitude = entity.Latitude,
-                Longitude = entity.Longitude,
-                Timestamp = entity.Timestamp
-            };
     }
 }

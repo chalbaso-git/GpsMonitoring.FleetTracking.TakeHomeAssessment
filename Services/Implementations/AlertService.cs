@@ -14,6 +14,11 @@ namespace Services.Implementations
             _repository = repository;
         }
 
+        /// <summary>
+        /// Agrega una nueva alerta al sistema.
+        /// </summary>
+        /// <param name="dto">Datos de la alerta a agregar.</param>
+        /// <exception cref="InvalidOperationException">Si ocurre un error al agregar la alerta.</exception>
         public void AddAlert(AlertDto dto)
         {
             try
@@ -26,6 +31,11 @@ namespace Services.Implementations
             }
         }
 
+        /// <summary>
+        /// Obtiene todas las alertas registradas en el sistema.
+        /// </summary>
+        /// <returns>Lista de alertas en formato <see cref="AlertDto"/>.</returns>
+        /// <exception cref="InvalidOperationException">Si ocurre un error al obtener las alertas.</exception>
         public List<AlertDto> GetAlerts()
         {
             try

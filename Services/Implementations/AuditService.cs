@@ -14,6 +14,11 @@ namespace Services.Implementations
             _auditLogRepository = auditLogRepository;
         }
 
+        /// <summary>
+        /// Registra un nuevo log de auditoría en el sistema.
+        /// </summary>
+        /// <param name="log">Datos del log de auditoría a registrar.</param>
+        /// <exception cref="InvalidOperationException">Si ocurre un error al registrar el log.</exception>
         public void Log(AuditLogDto log)
         {
             try
@@ -26,6 +31,12 @@ namespace Services.Implementations
             }
         }
 
+        /// <summary>
+        /// Obtiene todos los logs de auditoría asociados a un vehículo.
+        /// </summary>
+        /// <param name="vehicleId">Identificador del vehículo.</param>
+        /// <returns>Lista de logs en formato <see cref="AuditLogDto"/>.</returns>
+        /// <exception cref="InvalidOperationException">Si ocurre un error al obtener los logs.</exception>
         public List<AuditLogDto> GetLogs(string vehicleId)
         {
             try

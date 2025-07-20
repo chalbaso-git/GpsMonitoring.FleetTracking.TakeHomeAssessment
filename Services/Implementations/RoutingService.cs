@@ -25,6 +25,18 @@ namespace Services.Implementations
             _waypointRepository = waypointRepository;
         }
 
+        /// <summary>
+        /// Calcula la ruta óptima entre origen y destino para un vehículo.
+        /// <para>
+        /// <b>Nota sobre el algoritmo:</b> 
+        /// Esta implementación utiliza un mock que simula el cálculo de rutas y NO implementa el algoritmo A* real.
+        /// Para efectos de pruebas y demostración, se generan puntos intermedios aleatorios y se construye el camino.
+        /// Si se requiere una versión con A* simplificado, se debe reemplazar la lógica de <c>GetDynamicWaypoints</c> y <c>BuildPath</c> por una búsqueda de camino óptimo.
+        /// </para>
+        /// </summary>
+        /// <param name="request">Datos de la solicitud de ruteo.</param>
+        /// <returns>Respuesta con la ruta calculada o el error correspondiente.</returns>
+        /// <exception cref="InvalidOperationException">Si ocurre un error en el servicio de ruteo.</exception>
         public async Task<RouteResponseDto> CalculateRouteAsync(RouteRequestDto request)
         {
             try
