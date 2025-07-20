@@ -14,6 +14,7 @@ namespace Services
             services.AddScoped<IAuditService, AuditService>();
             services.AddScoped<IRouteService, RouteService>();
             services.AddScoped<IRoutingService, RoutingService>();
+            services.AddScoped<ICircuitBreakerService, CircuitBreakerService>();
 
             return services;
         }

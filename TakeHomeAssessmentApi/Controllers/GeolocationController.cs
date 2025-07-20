@@ -9,10 +9,24 @@ namespace TakeHomeAssessmentApi.Controllers
     public class GeolocationController : ControllerBase
     {
         private readonly IGeolocationService _geolocationService;
+
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador de geolocalización.
+        /// </summary>
+        /// <param name="geolocationService">Servicio para el almacenamiento de coordenadas GPS.</param>
         public GeolocationController(IGeolocationService geolocationService)
         {
             _geolocationService = geolocationService;
         }
+
+        /// <summary>
+        /// Almacena una coordenada GPS recibida.
+        /// </summary>
+        /// <param name="coordinateDto">Datos de la coordenada GPS a almacenar.</param>
+        /// <returns>Resultado de la operación de almacenamiento.</returns>
+        /// <response code="200">Coordenada GPS almacenada correctamente.</response>
+        /// <response code="400">Datos de coordenada GPS inválidos.</response>
+        /// <response code="500">Error interno al almacenar la coordenada GPS.</response>
         [HttpPost("store-coordinate")]
         public async Task<IActionResult> StoreCoordinate([FromBody] GpsCoordinateDto coordinateDto)
         {

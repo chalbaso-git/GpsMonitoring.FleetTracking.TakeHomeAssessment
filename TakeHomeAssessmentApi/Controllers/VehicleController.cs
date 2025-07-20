@@ -9,11 +9,22 @@ namespace TakeHomeAssessmentApi.Controllers
     {
         private readonly IVehicleService _vehicleService;
 
+        /// <summary>
+        /// Inicializa una nueva instancia del controlador de vehículos.
+        /// </summary>
+        /// <param name="vehicleService">Servicio para la gestión de vehículos.</param>
         public VehicleController(IVehicleService vehicleService)
         {
             _vehicleService = vehicleService;
         }
 
+        /// <summary>
+        /// Elimina un vehículo de forma distribuida.
+        /// </summary>
+        /// <param name="vehicleId">Identificador del vehículo a eliminar.</param>
+        /// <returns>Resultado de la operación de eliminación.</returns>
+        /// <response code="200">Vehículo eliminado correctamente.</response>
+        /// <response code="500">No se pudo eliminar el vehículo o se produjo un error interno.</response>
         [HttpDelete("{vehicleId}")]
         public async Task<IActionResult> DeleteVehicle(string vehicleId)
         {
