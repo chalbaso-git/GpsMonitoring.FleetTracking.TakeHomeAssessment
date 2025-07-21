@@ -1,9 +1,9 @@
 using Cross.Dtos;
 using Domain.Entities;
+using Infrastructure.Integrations.PostgreSQL.Base;
 using Interfaces.Infrastructure.EF;
 using Interfaces.Infrastructure.Redis;
 using Interfaces.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace Services.Implementations
 {
@@ -11,9 +11,9 @@ namespace Services.Implementations
     {
         private readonly IVehicleRepository _vehicleRepository;
         private readonly IRedisClient _redisClient;
-        private readonly DbContext _dbContext; 
+        private readonly PostgreSqlContext _dbContext; 
 
-        public VehicleService(IVehicleRepository vehicleRepository, IRedisClient redisClient, DbContext dbContext)
+        public VehicleService(IVehicleRepository vehicleRepository, IRedisClient redisClient, PostgreSqlContext dbContext)
         {
             _vehicleRepository = vehicleRepository;
             _redisClient = redisClient;

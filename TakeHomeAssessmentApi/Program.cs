@@ -1,8 +1,6 @@
 using Infrastructure;
 using Services;
 using StackExchange.Redis;
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Integrations.PostgreSQL.Base;
 
 var builder = WebApplication.CreateBuilder(args);
 

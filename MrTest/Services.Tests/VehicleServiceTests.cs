@@ -1,9 +1,9 @@
 using Cross.Dtos;
 using Cross.Helpers.Context;
 using Domain.Entities;
+using Infrastructure.Integrations.PostgreSQL.Base;
 using Interfaces.Infrastructure.EF;
 using Interfaces.Infrastructure.Redis;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
@@ -31,7 +31,7 @@ namespace MrTest.Services.Tests
                 .Returns(vehicles);
 
             var redisMock = new Mock<IRedisClient>();
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
 
             var service = new VehicleService(repoMock.Object, redisMock.Object, dbContextMock.Object);
 
@@ -56,7 +56,7 @@ namespace MrTest.Services.Tests
 
 
             var redisMock = new Mock<IRedisClient>();
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
 
             var service = new VehicleService(repoMock.Object, redisMock.Object, dbContextMock.Object);
 
@@ -79,7 +79,7 @@ namespace MrTest.Services.Tests
               .Returns([]);
 
             var redisMock = new Mock<IRedisClient>();
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
 
             var service = new VehicleService(repoMock.Object, redisMock.Object, dbContextMock.Object);
 
@@ -112,7 +112,7 @@ namespace MrTest.Services.Tests
                 LastSeen = DateTime.Parse("2024-01-01T10:00:00Z", CultureInfo.InvariantCulture)
             };     
 
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
             dbContextMock.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var repoMock = new Mock<IVehicleRepository>();
@@ -139,7 +139,7 @@ namespace MrTest.Services.Tests
             {
             }; 
 
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
             dbContextMock.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var repoMock = new Mock<IVehicleRepository>();
@@ -167,7 +167,7 @@ namespace MrTest.Services.Tests
             var vehicle = new Vehicle { Id = "V1" };
             var repoMock = new Mock<IVehicleRepository>();
             var redisMock = new Mock<IRedisClient>();
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
             var dbDatabaseMock = new Mock<DatabaseFacade>(dbContextMock.Object);
             var transactionMock = new Mock<IDbContextTransaction>();
 
@@ -199,7 +199,7 @@ namespace MrTest.Services.Tests
             var vehicle = new Vehicle { Id = "V1" };
             var repoMock = new Mock<IVehicleRepository>();
             var redisMock = new Mock<IRedisClient>();
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
             var dbDatabaseMock = new Mock<DatabaseFacade>(dbContextMock.Object);
             var transactionMock = new Mock<IDbContextTransaction>();
 
@@ -226,7 +226,7 @@ namespace MrTest.Services.Tests
             var vehicle = new Vehicle { Id = "V1" };
             var repoMock = new Mock<IVehicleRepository>();
             var redisMock = new Mock<IRedisClient>();
-            var dbContextMock = new Mock<DbContext>();
+            var dbContextMock = new Mock<PostgreSqlContext>();
             var dbDatabaseMock = new Mock<DatabaseFacade>(dbContextMock.Object);
             var transactionMock = new Mock<IDbContextTransaction>();
 

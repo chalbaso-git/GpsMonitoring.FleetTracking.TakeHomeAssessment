@@ -6,5 +6,6 @@ namespace Infrastructure.Integrations.PostgreSQL.EF
 {
     public class VehicleRepository (PostgreSqlContext postgreSqlContext ) : GenericRepository<Vehicle>(postgreSqlContext), IVehicleRepository
     { 
+
     }
 }
