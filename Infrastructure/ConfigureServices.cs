@@ -29,12 +29,16 @@ namespace Infrastructure
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             );
 
-            services.AddScoped<IRedisClient, RedisClient>();
-            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+            // Repositories
             services.AddScoped<IAlertRepository, AlertRepository>();
-            services.AddScoped<IRouteCache, RouteCache>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+            services.AddScoped<IVehicleRepository, VehicleRepository>();
             services.AddScoped<IRouteRepository, RouteRepository>();
             services.AddScoped<IWaypointRepository, WaypointRepository>();
+
+            // Services
+            services.AddScoped<IRedisClient, RedisClient>();
+            services.AddScoped<IRouteCache, RouteCache>();
 
             return services;
         }
