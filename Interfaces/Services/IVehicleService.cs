@@ -1,9 +1,13 @@
+using Cross.Dtos;
 using System.Threading.Tasks;
 
 namespace Interfaces.Services
 {
     public interface IVehicleService
     {
-        Task<bool> DeleteVehicleDistributedAsync(string vehicleId);
+        bool DeleteVehicleDistributed(string vehicleId);
+        List<VehicleDto> GetVehicles();
+        VehicleDto? GetVehicleById(string id);
+        bool UpdateVehicle(VehicleDto vehicleDto);
     }
 }

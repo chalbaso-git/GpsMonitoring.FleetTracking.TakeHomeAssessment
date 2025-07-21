@@ -9,11 +9,13 @@ namespace Services.Implementations
     public class GeolocationService : IGeolocationService
     {
         private readonly IRedisClient _redisClient;
+        private readonly IVehicleService _vehicleService;
         private static readonly ConcurrentQueue<GpsCoordinate> _pendingQueue = new();
 
-        public GeolocationService(IRedisClient redisClient)
+        public GeolocationService(IRedisClient redisClient, IVehicleService vehicleService)
         {
             _redisClient = redisClient;
+            _vehicleService = vehicleService;
         }
 
         /// <summary>
@@ -47,6 +49,41 @@ namespace Services.Implementations
             try
             {
                 await _redisClient.SaveCoordinateAsync(entity);
+
+                // Guardar en la base de datos la última ubicación consultada para el vehículo      
+                if (entity.VehicleId != null)
+                {
+                    var vehicle = _vehicleService.GetVehicleById(entity.VehicleId);
+
+                    vehicle!.LastLocation = $"{coordinateDto.Latitude},{coordinateDto.Longitude}";
+                    vehicle.LastSeen = coordinateDto.Timestamp;
+                    // Reemplaza este bloque en el método StoreCoordinateAsync:
+
+                    if (entity.VehicleId != null)
+                    {
+                        vehicle = _vehicleService.GetVehicleById(entity.VehicleId);
+
+                        vehicle!.LastLocation = $"{coordinateDto.Latitude},{coordinateDto.Longitude}";
+                        vehicle.LastSeen = coordinateDto.Timestamp;
+                        _vehicleService.UpdateVehicle(vehicle);
+                    }
+
+                    // Por este bloque, agregando comprobación de null para evitar CS8602:
+
+                    if (entity.VehicleId != null)
+                    {
+                        vehicle = _vehicleService.GetVehicleById(entity.VehicleId);
+
+                        if (vehicle != null)
+                        {
+                            vehicle.LastLocation = $"{coordinateDto.Latitude},{coordinateDto.Longitude}";
+                            vehicle.LastSeen = coordinateDto.Timestamp;
+                            _vehicleService.UpdateVehicle(vehicle);
+                        }
+                    }
+                    _vehicleService.UpdateVehicle(vehicle!);
+                }
+
                 // Intentar procesar la cola pendiente si existe
                 await ProcessPendingQueueAsync();
             }
@@ -82,5 +119,7 @@ namespace Services.Implementations
             if (dto.Latitude < -90 || dto.Latitude > 90 || dto.Longitude < -180 || dto.Longitude > 180)
                 throw new ArgumentException("Invalid GPS coordinates.");
         }
+
     }
+
 }

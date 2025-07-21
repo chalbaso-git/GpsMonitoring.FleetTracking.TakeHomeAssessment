@@ -1,6 +1,6 @@
-﻿namespace Domain.Entities
+namespace Cross.Dtos
 {
-    public class Vehicle
+    public class VehicleDto
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;

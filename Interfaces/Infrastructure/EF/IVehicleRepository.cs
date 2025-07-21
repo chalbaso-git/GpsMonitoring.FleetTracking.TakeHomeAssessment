@@ -1,7 +1,8 @@
+using Domain.Entities;
+
 namespace Interfaces.Infrastructure.EF
 {
-    public interface IVehicleRepository
+    public interface IVehicleRepository : IGenericRepository<Vehicle>
     {
-        Task DeleteAsync(string vehicleId);
     }
 }
