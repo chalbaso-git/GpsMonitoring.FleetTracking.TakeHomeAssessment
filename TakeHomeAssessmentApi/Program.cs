@@ -21,6 +21,25 @@ builder.Services.AddServices(builder.Configuration);
 
 // Add controllers
 builder.Services.AddControllers();
+
+// Configurar CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "https://localhost:3000",
+                "http://192.168.1.16:3000",
+                "https://192.168.1.16:3000"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -31,9 +50,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
 
 app.UseHttpsRedirection();
+
+// IMPORTANTE: UseCors debe ir ANTES de UseRouting
+app.UseCors("AllowFrontend");
+app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();
